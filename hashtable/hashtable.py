@@ -23,7 +23,11 @@ class HashTable:
     def __init__(self, capacity):
         # Your code here
         self.capacity = capacity
-        keys = ""
+        self.storage = [] * capacity
+        self.size = len(self.storage)
+        # "key-0", "val-0"
+        # self.key = (key-)
+
 
 
     def get_num_slots(self):
@@ -37,7 +41,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
-
+        return len(self.storage)
 
     def get_load_factor(self):
         """
@@ -46,6 +50,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        pass
 
 
     def fnv1(self, key):
@@ -54,8 +59,14 @@ class HashTable:
 
         Implement this, and/or DJB2.
         """
+        # algorithm fnv-1 is
+        #     hash := FNV_offset_basis do
 
-        # Your code here
+        #     for each byte_of_data to be hashed
+        #         hash := hash × FNV_prime
+        #         hash := hash XOR byte_of_data
+
+        #     return hash 
 
 
     def djb2(self, key):
@@ -65,6 +76,10 @@ class HashTable:
         Implement this, and/or FNV-1.
         """
         # Your code here
+        hash = 5381
+        for char in key:
+            hash = (hash * 33) + ord(char)
+        return hash % self.capacity
 
 
     def hash_index(self, key):
@@ -72,7 +87,10 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
+        # for i in range(capacity):
+        #     hash_value = djb2(self, key)
+        # return hash_value
+        # return self.fnv1(key) % self.capacity
         return self.djb2(key) % self.capacity
 
     def put(self, key, value):
@@ -84,7 +102,14 @@ class HashTable:
         Implement this.
         """
         # Your code here
-
+        # my_list[my_hashing_func("aqua", len(my_list))] = "#00FFFF"
+        ## 1. hash the word, get some number back from hash function
+        hasher = djb2(self, key)
+        ## 2. modulo this number with array length to find the index
+        hashed = hasher % self.size
+        ## 3. use index to insert word
+        # self.storage[fnv1(self, key)] = value
+        self.storage[hashed] = value
 
     def delete(self, key):
         """
@@ -95,6 +120,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        pass
 
 
     def get(self, key):
@@ -106,6 +132,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        return self.storage[fnv1(self, key)]
 
 
     def resize(self, new_capacity):
@@ -116,6 +143,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        pass
 
 
 
@@ -139,7 +167,7 @@ if __name__ == "__main__":
 
     # Test storing beyond capacity
     for i in range(1, 13):
-        print(ht.get(f"line_{i}"))
+        print(ht.get(f`line_{i}`))
 
     # Test resizing
     old_capacity = ht.get_num_slots()
