@@ -46,8 +46,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
-        pass
+        load = total number in hash table / total number of slots
 
 
     def fnv1(self, key):
@@ -67,12 +66,6 @@ class HashTable:
         
         # assert isinstance(data, bytes)
 
-        # hval = hval_init
-        # for byte in data:
-        #     hval = (hval * fnv_prime) % fnv_size
-        #     hval = hval ^ _get_byte(byte)
-        # return hval
-
 
     def djb2(self, key):
         """
@@ -82,7 +75,8 @@ class HashTable:
         """
         hash = 5381
         for char in key:
-            hash = (hash * 33) + ord(char)
+            # hash = (hash * 33) + ord(char)
+            hash = (( hash << 5) + hash) + ord(char)
             print("HASH: ", hash)
         return hash
 
