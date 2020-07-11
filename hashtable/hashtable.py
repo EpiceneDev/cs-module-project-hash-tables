@@ -24,9 +24,7 @@ class HashTable:
 
         self.capacity = capacity
         self.storage = [None] * capacity
-        self.size = len(self.storage)
-        # self.occupied = 0
-
+        self.count = 0
 
 
     def get_num_slots(self):
@@ -47,7 +45,7 @@ class HashTable:
 
         Implement this.
         """
-        load = total number in hash table / self.get_num_slots
+        load = self.count / self.get_num_slots
 
 
     def fnv1(self, key):
@@ -81,6 +79,13 @@ class HashTable:
             print("HASH: ", hash)
         return hash
 
+        # hash_a = 5381
+        # key_str_bytes = str.encode(key)
+        # for x in key_str_bytes:
+        #     hash_a = ((hash_a << 5) + hash_a) + x
+        
+        # return self._hash_mod(hash_a)
+
 
     def hash_index(self, key):
         """
@@ -88,7 +93,7 @@ class HashTable:
         between within the storage capacity of the hash table.
         """
         # return self.fnv1(key) % self.storage
-        print("hash_index: ", self.djb2(key) % self.storage)
+        # print("hash_index: ", self.djb2(key) % self.storage)
         return self.djb2(key) % self.storage
 
     def put(self, key, value):
@@ -99,23 +104,57 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
-        # my_list[my_hashing_func("aqua", len(my_list))] = "#00FFFF"
-        ## 1. hash the word, get some number back from hash function
         index = self.hash_index(key)
-        ## 2. modulo this number with array length to find the index
-        ##    Being done by hash_index function
-        ## 3. use index to insert word
-        # self.storage[fnv1(self, key)] = value
-        if self.storage[index] != None:
-            # TODO
-            ## create a dll
-            ## make the head the current hashed key
-            ## put into the tail the new key
 
-            self.storage[index] = value
-        print("PUT: ", value)
-        return value
+        if self.storage[index]:
+            node = self.storage[index]
+
+            while node:
+                if node.key == key:
+                    node.value = value
+                    break
+                elif node.next:
+                    node = node.next
+                else:
+                    node.next = HashTableEntry(key, value)
+                    self.count += 1
+                    self.resize()
+                    break
+
+        else:
+            self.storage[index] = HashTableEntry(key, value)
+            self.count += 1
+            self.resize()
+        # ## 1. hash the word, get some number back from hash function
+        # ## 2. modulo this number with array length to find the index
+        # ##    Being done by hash_index function
+        # index = self.hash_index(key)
+        # ## 3. use index to insert word
+        # # self.storage[fnv1(self, key)] = value
+        # # if self.storage[index] != None:
+        # #     self.storage[index] 
+        # #     cur_value = self.storage[index]
+        # cur_value = self.storage[index]
+        # # if there are no contents or cur_value is equal to none, 
+        # # If the value of the list at the hash function’s returned index is empty, a new 
+        # # linked list is created with the value as the first element of the linked list.
+        # ## if the currrent value at the index is empty, 
+        # ## start the liked list with the key value pair at this index
+        # if cur_value is None:
+        #     self.storage[index] = HashTableEntry(key, value)
+        #     return
+
+        # ## if the current value has contents, check if 
+        # if cur_value.key == key:
+        #     self.storage[index] = HashTableEntry(key, value)
+                
+            
+        #     ## make the head the current hashed key
+        #     ## put into the tail the new key
+
+        #     self.storage[index] = value
+        # print("PUT: ", value)
+        # return value
 
     def delete(self, key):
         """
@@ -126,7 +165,38 @@ class HashTable:
         Implement this.
         """
         index = self.hash_index(key)
-        self.storage[index] = None
+
+        if not self.storage(index):
+            print("NO KEY FOUND!")
+            return
+
+        node = self.storage(index)
+
+        prev_node = None
+
+        while node:
+            if node.key == key:
+                if prev_node:
+                    if node.next:
+                        prev_node.next = node.next
+                    else:
+                        prev_node.next = None
+                else:
+                    if node.next:
+                        self.storage[index] = node.next
+                    else self.storage[index] = None
+                
+                temp = node
+                self.count -= 1
+                self.resize()
+                return temp.value
+
+            elif node.next:
+                prev_node = node
+                node = node.next
+            else:
+                print("NO KEY FOUND!")
+                return
 
 
 
@@ -142,8 +212,17 @@ class HashTable:
         ## 1. hash the key/word, get number back from hash function
         ## 2. modulo with array length to find index
         ## 3. look up value at that index, return it
-        newKey = self.hash_index(key) 
-        return self.storage[newKey]
+        index = self.hash_index(key) 
+        
+        if not self.storage[index]:
+            return None
+        else:
+            node = self.storage[index]
+            while node:
+                if node.key == key:
+                    return node.value
+                node = node.next
+            return None
 
 
     def resize(self, new_capacity):
@@ -153,24 +232,34 @@ class HashTable:
 
         Implement this.
         """
-        replacement = []
+        if self.count / self.capacity > 0.7:
+            # double capacity
+            temp_list = []
+            for a in self.storage:
+                node = a
+                while node:
+                    temp_list.append([node.key, node.value])
+                    node = node.next
 
-        if new_capacity >= self.capacity:
-            addToList = [None] * (new_capacity - self.capacity)
+            self.capacity = 2 * self.capacity
+            self.storage = [None] * self.capacity
 
-            for i in addToList:
-                self.storage.append(i)
+            for b in temp_list:
+                self.put(b[0], b[1])
+                self.count -= 1
 
-            replacement = self.storage
-            return replacement
-        else:
-            replacement = self.storage[:new_capacity]
-            return replacement
-        
-        self.storage = replacement
+            # shrink capacity
+        if self.count / self.capacity < 0.2:
+            temp_list = []
+            for a in self.storage:
+                node = a
+                while node:
+                    temp_list.append([node.key, node.value])
+                    node = node.next
 
+            self.capacity = self.capacity // 2
+            self.storage = [None] * self.capacity
 
-        
 
 
 if __name__ == "__main__":
