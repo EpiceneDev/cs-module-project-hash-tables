@@ -25,6 +25,7 @@ class HashTable:
         self.capacity = capacity
         self.storage = [None] * capacity
         self.size = len(self.storage)
+        # self.occupied = 0
 
 
 
@@ -46,7 +47,7 @@ class HashTable:
 
         Implement this.
         """
-        load = total number in hash table / total number of slots
+        load = total number in hash table / self.get_num_slots
 
 
     def fnv1(self, key):
@@ -86,9 +87,9 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        # return self.fnv1(key) % self.capacity
-        print("hash_index: ", self.djb2(key) % self.capacity)
-        return self.djb2(key) % self.capacity
+        # return self.fnv1(key) % self.storage
+        print("hash_index: ", self.djb2(key) % self.storage)
+        return self.djb2(key) % self.storage
 
     def put(self, key, value):
         """
@@ -106,7 +107,13 @@ class HashTable:
         ##    Being done by hash_index function
         ## 3. use index to insert word
         # self.storage[fnv1(self, key)] = value
-        self.storage[index] = value
+        if self.storage[index] != None:
+            # TODO
+            ## create a dll
+            ## make the head the current hashed key
+            ## put into the tail the new key
+
+            self.storage[index] = value
         print("PUT: ", value)
         return value
 
