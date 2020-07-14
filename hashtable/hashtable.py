@@ -119,14 +119,13 @@ class HashTable:
             # print('CURRENT NODE: ', current_node)
 
             current_node.value = value
-            self.count += 1
         # else create the node, insert the value and check the load value.
         else:
             new_node = HashTableEntry(key, value)
             new_node.next = self.storage[index]
             self.storage[index] = new_node 
-
-            print(f"new_node = {new_node}  storage = {self.storage[index]}/n")
+            print("++>>>", new_node)
+            # print(f"new_node = {new_node}  storage = {self.storage[index]}")
             self.count += 1 
 
             if self.get_load_factor() > 0.7:
@@ -148,7 +147,8 @@ class HashTable:
         last_node = None
 
         while current_node is not None and current_node.key != key:
-            current_node = current_node.next 
+            last_node = current_node
+            current_node = last_node.next 
 
         if current_node is None:
             print("ERROR: Unable to remove node with key " + key)
@@ -182,6 +182,7 @@ class HashTable:
 
         while node:
             if node.key == key:
+                print("Node value: ", node.value)
                 return node.value
             node = node.next
 
@@ -194,37 +195,24 @@ class HashTable:
 
         Implement this.
         """
-        
-        if self.count / self.capacity > 0.7:
-            # double capacity
-            temp_list = []
-            for a in self.storage:
-                node = a
-                while node:
-                    temp_list.append([node.key, node.value])
-                    node = node.next
+        temp_list = []
+        self.count = 0
+        old_storage = self.storage
+        self.capacity = new_capacity
+        self.storage = [None] * self.capacity
+        current_node = None
+        old_count = self.count
 
-            self.capacity = 2 * self.capacity
-            self.storage = [None] * self.capacity
+        for item in old_storage:
+            current_node = item
+            while current_node is not None:
+                self.put(current_node.key, current_node.value)
+                current_node = current_node.next
 
-            for b in temp_list:
-                self.put(b[0], b[1])
-                self.count -= 1
+        self.count = old_count
+        # print("new capacity ", new_capacity)
 
-            # shrink capacity
-        if self.count / self.capacity < 0.2:
-            temp_list = []
-            for a in self.storage:
-                node = a
-                while node:
-                    temp_list.append([node.key, node.value])
-                    node = node.next
-
-            self.capacity = self.capacity // 2
-            self.storage = [None] * self.capacity
-
-
-
+            
 
 if __name__ == "__main__":
     ht = HashTable(8)
