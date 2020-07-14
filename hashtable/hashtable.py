@@ -45,7 +45,8 @@ class HashTable:
 
         Implement this.
         """
-        load = self.count / self.get_num_slots
+        load = self.count / self.get_num_slots()
+        return load
 
 
     def fnv1(self, key):
@@ -76,7 +77,7 @@ class HashTable:
         for char in key:
             # hash = (hash * 33) + ord(char)
             hash = (( hash << 5) + hash) + ord(char)
-            print("HASH: ", hash)
+            # print("HASH: ", hash)
         return hash
 
         # hash_a = 5381
@@ -94,7 +95,7 @@ class HashTable:
         """
         # return self.fnv1(key) % self.storage
         # print("hash_index: ", self.djb2(key) % self.storage)
-        return self.djb2(key) % self.storage
+        return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -106,55 +107,31 @@ class HashTable:
         """
         index = self.hash_index(key)
 
-        if self.storage[index]:
-            node = self.storage[index]
+        current_node = self.storage[index]
 
-            while node:
-                if node.key == key:
-                    node.value = value
-                    break
-                elif node.next:
-                    node = node.next
-                else:
-                    node.next = HashTableEntry(key, value)
-                    self.count += 1
-                    self.resize()
-                    break
+        # Search for the key
+        while current_node is not None and current_node.key != key:
+            current_node = current_node.next 
+        # When the key if found, insert value if the node already
+        # has value.. As it is already optimized (load factor) and just 
+        # needs to be inserted in the table TODO ask Jose
+        if current_node is not None:
+            # print('CURRENT NODE: ', current_node)
 
-        else:
-            self.storage[index] = HashTableEntry(key, value)
+            current_node.value = value
             self.count += 1
-            self.resize()
-        # ## 1. hash the word, get some number back from hash function
-        # ## 2. modulo this number with array length to find the index
-        # ##    Being done by hash_index function
-        # index = self.hash_index(key)
-        # ## 3. use index to insert word
-        # # self.storage[fnv1(self, key)] = value
-        # # if self.storage[index] != None:
-        # #     self.storage[index] 
-        # #     cur_value = self.storage[index]
-        # cur_value = self.storage[index]
-        # # if there are no contents or cur_value is equal to none, 
-        # # If the value of the list at the hash function’s returned index is empty, a new 
-        # # linked list is created with the value as the first element of the linked list.
-        # ## if the currrent value at the index is empty, 
-        # ## start the liked list with the key value pair at this index
-        # if cur_value is None:
-        #     self.storage[index] = HashTableEntry(key, value)
-        #     return
+        # else create the node, insert the value and check the load value.
+        else:
+            new_node = HashTableEntry(key, value)
+            new_node.next = self.storage[index]
+            self.storage[index] = new_node 
 
-        # ## if the current value has contents, check if 
-        # if cur_value.key == key:
-        #     self.storage[index] = HashTableEntry(key, value)
-                
-            
-        #     ## make the head the current hashed key
-        #     ## put into the tail the new key
+            print(f"new_node = {new_node}  storage = {self.storage[index]}/n")
+            self.count += 1 
 
-        #     self.storage[index] = value
-        # print("PUT: ", value)
-        # return value
+            if self.get_load_factor() > 0.7:
+                self.resize(self.capacity * 2)  
+
 
     def delete(self, key):
         """
@@ -166,37 +143,28 @@ class HashTable:
         """
         index = self.hash_index(key)
 
-        if not self.storage(index):
-            print("NO KEY FOUND!")
-            return
+        current_node = self.storage[index]
 
-        node = self.storage(index)
+        last_node = None
 
-        prev_node = None
+        while current_node is not None and current_node.key != key:
+            current_node = current_node.next 
 
-        while node:
-            if node.key == key:
-                if prev_node:
-                    if node.next:
-                        prev_node.next = node.next
-                    else:
-                        prev_node.next = None
-                else:
-                    if node.next:
-                        self.storage[index] = node.next
-                    else self.storage[index] = None
-                
-                temp = node
-                self.count -= 1
-                self.resize()
-                return temp.value
-
-            elif node.next:
-                prev_node = node
-                node = node.next
+        if current_node is None:
+            print("ERROR: Unable to remove node with key " + key)
+        else:
+            if last_node is None:
+                self.storage[index] = current_node.next
             else:
-                print("NO KEY FOUND!")
-                return
+                last_node.next = current_node.next
+            if self.get_load_factor() < 0.2:
+                if self.capacity > MIN_CAPACITY:
+                    new_capacity = self.capacity // 2
+                    if new_capacity < MIN_CAPACITY:
+                        new_capacity = MIN_CAPACITY
+                    self.resize(new_capacity)
+
+
 
 
 
@@ -208,21 +176,15 @@ class HashTable:
 
         Implement this.
         """
-        # steps to get
-        ## 1. hash the key/word, get number back from hash function
-        ## 2. modulo with array length to find index
-        ## 3. look up value at that index, return it
         index = self.hash_index(key) 
         
-        if not self.storage[index]:
-            return None
-        else:
-            node = self.storage[index]
-            while node:
-                if node.key == key:
-                    return node.value
-                node = node.next
-            return None
+        node = self.storage[index]
+
+        while node:
+            if node.key == key:
+                return node.value
+            node = node.next
+
 
 
     def resize(self, new_capacity):
@@ -232,6 +194,7 @@ class HashTable:
 
         Implement this.
         """
+        
         if self.count / self.capacity > 0.7:
             # double capacity
             temp_list = []
@@ -259,6 +222,7 @@ class HashTable:
 
             self.capacity = self.capacity // 2
             self.storage = [None] * self.capacity
+
 
 
 
